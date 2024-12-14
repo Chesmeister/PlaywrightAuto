@@ -1,57 +1,61 @@
+const express = require('express');
 const { chromium } = require('playwright');
 
-(async () => {
+const app = express();
+app.use(express.json()); // For parsing JSON request bodies
 
-var EventID = req.param('EventID');
-    var CustomerID = req.param('CustomerID');
-    var FinalNumber = req.param('FinalNumber');
-    
-    // Remove all non-numeric characters using regex
-    var numericCustomerID = CustomerID.replace(/\D/g, '');
+// Define an API endpoint
+app.post('/run-playwright', async (req, res) => {
+  const { EventID, CustomerID, FinalNumber } = req.body;
 
-    const browser = await chromium.launch({ headless: false }); // Launch the browser
-    const page = await browser.newPage(); // Create a new page
+  if (!EventID || !CustomerID || !FinalNumber) {
+    return res.status(400).send('Missing required parameters: EventID, CustomerID, FinalNumber');
+  }
 
-    try {
-      // Step 1: Navigate to the login page
-      await page.goto('https://www.guruwalk.com/login_with_password');
+  // Remove all non-numeric characters from CustomerID
+  const numericCustomerID = CustomerID.replace(/\D/g, '');
 
-      // Step 2: Fill in the email and password
-      await page.getByPlaceholder('Enter your email address').click();
-      await page.getByPlaceholder('Enter your email address').fill('guru@tourmeaway.com');
-      await page.getByPlaceholder('Enter your email address').press('Tab');
-      await page.getByPlaceholder('Enter your password').fill('tourmeaway77');
-      await page.getByPlaceholder('Enter your password').press('Enter');
+  // Launch Playwright
+  const browser = await chromium.launch({ headless: true }); // Change to `false` if you need a visible browser
+  const page = await browser.newPage();
 
-      // Step 3: Navigate to the specific tour session
-      await page.goto('https://www.guruwalk.com/gurus/tour_sessions/'+EventID);
+  try {
+    // Step 1: Navigate to the login page
+    await page.goto('https://www.guruwalk.com/login_with_password');
 
-      // Step 4: Wait for the booking form to be visible
-      const bookingFormSelector = `form[action="/gurus/bookings/${numericCustomerID}"]`;
-      await page.waitForSelector(bookingFormSelector);
-      console.log('Booking form is visible.');
+    // Step 2: Fill in the email and password
+    await page.getByPlaceholder('Enter your email address').fill('guru@tourmeaway.com');
+    await page.getByPlaceholder('Enter your password').fill('tourmeaway77');
+    await page.getByPlaceholder('Enter your password').press('Enter');
+    console.log('Logged in successfully.');
 
-      // Step 5: Locate the form and attendees dropdown
-      const bookingForm = await page.locator(bookingFormSelector);
-      const attendeesDropdown = await bookingForm.locator('#booking_attendees');
-      await attendeesDropdown.waitFor();
-      console.log('Attendees dropdown is found.');
+    // Step 3: Navigate to the specific tour session
+    await page.goto(`https://www.guruwalk.com/gurus/tour_sessions/${EventID}`);
+    console.log(`Navigated to EventID: ${EventID}`);
 
-      // Step 6: Select the option '0'
-      await attendeesDropdown.selectOption(FinalNumber);
-      console.log('Option '+FinalNumber+' is selected.');
+    // Step 4: Wait for the booking form to be visible
+    const bookingFormSelector = `form[action="/gurus/bookings/${numericCustomerID}"]`;
+    await page.waitForSelector(bookingFormSelector);
+    console.log('Booking form is visible.');
 
-      // Step 7: Wait for 2 seconds before closing
-      await page.waitForTimeout(2000); // Wait for 2000 milliseconds (2 seconds)
-      console.log('Waiting for 2 seconds before closing the page...');
+    // Step 5: Select attendees dropdown and update value
+    const bookingForm = await page.locator(bookingFormSelector);
+    const attendeesDropdown = await bookingForm.locator('#booking_attendees');
+    await attendeesDropdown.selectOption(FinalNumber);
+    console.log(`Updated attendees to: ${FinalNumber}`);
 
-    } catch (error) {
-      console.error('Error during selection:', error);
-      return res.serverError(error); // Respond with an error
-    } finally {
-      await browser.close(); // Ensure the browser is closed
-    }
+    await page.waitForTimeout(2000); // Wait briefly before closing
+    res.status(200).send('Playwright task completed successfully!');
+  } catch (error) {
+    console.error('Error during Playwright execution:', error);
+    res.status(500).send('An error occurred during the Playwright task.');
+  } finally {
+    await browser.close(); // Ensure the browser is closed
+  }
+});
 
-    return res.ok('Successfully marked as no-show'); // Respond with success
-    
-})();
+// Start the Express server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
