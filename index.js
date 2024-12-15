@@ -6,6 +6,17 @@ app.use(express.json()); // For parsing JSON request bodies
 
 // Define an API endpoint
 app.post('/run-playwright', async (req, res) => {
+  
+  console.log("Received a request at /run-playwright");
+  console.log("Request Body:", req.body);
+
+  const { EventID, CustomerID, FinalNumber } = req.body;
+
+  if (!EventID || !CustomerID || !FinalNumber) {
+    console.log("Missing required parameters.");
+    return res.status(400).send('Missing required parameters: EventID, CustomerID, FinalNumber');
+  }
+  
   const { EventID, CustomerID, FinalNumber } = req.body;
 
   if (!EventID || !CustomerID || !FinalNumber) {
