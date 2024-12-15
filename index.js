@@ -57,6 +57,46 @@ app.post('/run-playwright', async (req, res) => {
   }
 });
 
+
+// Define a new API endpoint for GuruCloseTour
+app.post('/GuruCloseTour', async (req, res) => {
+  console.log("Received a request at /GuruCloseTour");
+  console.log("Request Body:", req.body);
+  const { url } = req.body;
+
+  if (url) {
+    return res.status(400).send('Missing required parameters: Url');
+  }
+
+  const browser = await chromium.launch({ headless: true }); // Launch Playwright
+  const page = await browser.newPage();
+
+  try {
+    // Login to the website
+    await page.goto('https://www.guruwalk.com/login_with_password');
+    await page.getByPlaceholder('Enter your email address').fill('guru@tourmeaway.com');
+    await page.getByPlaceholder('Enter your password').fill('tourmeaway77');
+    await page.getByPlaceholder('Enter your password').press('Enter');
+    console.log('Logged in successfully.');
+
+    // Visit the provided URL
+    console.log(`Navigating to the provided URL: ${url}`);
+    await page.goto(url);
+    console.log(`Visited URL: ${url}`);
+
+    // Optionally, perform any additional actions on the page (if needed)
+    await page.waitForTimeout(2000); // Wait briefly to ensure the page loads
+    
+    // Send success response
+    res.status(200).send(`Successfully visited the URL: ${url}`);
+  } catch (error) {
+    console.error('Error during GuruCloseTour execution:', error);
+    res.status(500).send('An error occurred while closing the tour.');
+  } finally {
+    await browser.close(); // Ensure the browser is closed
+  }
+});
+
 // Start the Express server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
