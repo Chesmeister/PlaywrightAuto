@@ -11,9 +11,9 @@ app.post('/run-playwright', async (req, res) => {
   console.log("Request Body:", req.body);
   const { EventID, CustomerID, FinalNumber } = req.body;
 
-  if (!EventID || !CustomerID || !FinalNumber) {
-    return res.status(400).send('Missing required parameters: EventID, CustomerID, FinalNumber');
-  }
+if (!EventID || !CustomerID || FinalNumber === undefined) {
+  return res.status(400).send('Missing required parameters: EventID, CustomerID, FinalNumber');
+}
 
   // Remove all non-numeric characters from CustomerID
   const numericCustomerID = CustomerID.replace(/\D/g, '');
