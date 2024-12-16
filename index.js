@@ -42,10 +42,16 @@ if (!EventID || !CustomerID || FinalNumber === undefined) {
     console.log('Booking form is visible.');
 
     // Step 5: Select attendees dropdown and update value
-    const bookingForm = await page.locator(bookingFormSelector);
-    const attendeesDropdown = await bookingForm.locator('#booking_attendees');
-    await attendeesDropdown.selectOption(FinalNumber);
-    console.log(`Updated attendees to: ${FinalNumber}`);
+const bookingForm = await page.locator(bookingFormSelector);
+const attendeesDropdown = await bookingForm.locator('#booking_attendees');
+
+// If FinalNumber represents the value attribute of the option
+await attendeesDropdown.selectOption(String(FinalNumber));
+
+// If FinalNumber represents the index of the option
+await attendeesDropdown.selectOption({ index: FinalNumber });
+
+console.log(`Updated attendees to: ${FinalNumber}`);
 
     await page.waitForTimeout(2000); // Wait briefly before closing
     res.status(200).send('Playwright task completed successfully!');
