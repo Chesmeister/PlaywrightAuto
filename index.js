@@ -66,7 +66,7 @@ app.post('/GuruCloseTour', async (req, res) => {
   console.log("Request Body:", req.body);
   const { url } = req.body;
 
-  if (url) {
+  if (!url) {
     return res.status(400).send('Missing required parameters: Url');
   }
 
