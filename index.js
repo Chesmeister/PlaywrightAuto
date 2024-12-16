@@ -47,10 +47,6 @@ const attendeesDropdown = await bookingForm.locator('#booking_attendees');
 
 // If FinalNumber represents the value attribute of the option
 await attendeesDropdown.selectOption(String(FinalNumber));
-
-// If FinalNumber represents the index of the option
-await attendeesDropdown.selectOption({ index: FinalNumber });
-
 console.log(`Updated attendees to: ${FinalNumber}`);
 
     await page.waitForTimeout(2000); // Wait briefly before closing
